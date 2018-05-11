@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/mrbeskin/drone-hack/control"
+
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/platforms/dji/tello"
 )
@@ -27,13 +29,17 @@ func main() {
 			drone.TakeOff()
 		})
 
-		gobot.After(10*time.Second, func() {
-			drone.Flip(1)
-		})
+		control.InitControl(drone)
 
-		gobot.After(15*time.Second, func() {
-			drone.Land()
-		})
+		/*
+			gobot.After(10*time.Second, func() {
+				drone.Flip(1)
+			})
+
+			gobot.After(15*time.Second, func() {
+				drone.Land()
+			})
+		*/
 	}
 
 	robot := gobot.NewRobot("tello",
