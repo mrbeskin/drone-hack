@@ -22,10 +22,10 @@ func main() {
 
 	go WriteCameraOutputToMplayer(droneVideoOutput, mIn)
 
-	time.Sleep(5 * time.Second)
-
 	work := func() {
-		drone.TakeOff()
+		gobot.After(5*time.Second, func() {
+			drone.TakeOff()
+		})
 
 		gobot.After(10*time.Second, func() {
 			drone.Flip(1)
