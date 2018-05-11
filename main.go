@@ -13,10 +13,25 @@ import (
 func main() {
 	drone := tello.NewDriver("8888")
 
+	mIn, err := GetMPlayerInput()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	droneVideoOutput := GetCamStream(drone)
+
+	go WriteCameraOutputToMplayer(droneVideoOutput, mIn)
+
+	time.Sleep(5 * time.Second)
+
 	work := func() {
 		drone.TakeOff()
 
-		gobot.After(5*time.Second, func() {
+		gobot.After(10*time.Second, func() {
+			drone.Flip(1)
+		})
+
+		gobot.After(15*time.Second, func() {
 			drone.Land()
 		})
 	}
@@ -32,7 +47,7 @@ func main() {
 
 func GetMPlayerInput() (io.WriteCloser, error) {
 	mPlayer := exec.Command("mplayer", "-vo", "x11", "-fps", "30", "-")
-	mPlayer.Start()
+	defer mPlayer.Start()
 	return mPlayer.StdinPipe()
 }
 
