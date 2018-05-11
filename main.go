@@ -29,7 +29,7 @@ func main() {
 			drone.TakeOff()
 		})
 
-		control.InitControl(drone)
+		go control.InitControl(drone)
 
 		/*
 			gobot.After(10*time.Second, func() {
