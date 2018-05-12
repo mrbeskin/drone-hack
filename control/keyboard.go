@@ -3,72 +3,70 @@ package control
 import (
 	"fmt"
 
-	term "github.com/nsf/termbox-go"
+	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/platforms/dji/tello"
+	"gobot.io/x/gobot/platforms/keyboard"
 )
 
 const speed = 40
 
 func InitControl(driver *tello.Driver) {
-	err := term.Init()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 
-	defer term.Close()
+	keyb := keyboard.NewDriver()
 
 	fmt.Println("Drone: control intitialized")
-	for {
-		event := term.PollEvent()
-		switch event.Type {
-		case term.EventKey:
-			switch event.Ch {
-			case 'w':
-				term.Sync()
+
+	work := func() {
+
+		keyb.On(keyboard.Key, func(data interface{}) {
+
+			k := data.(keyboard.KeyEvent)
+
+			switch k.Key {
+			case keyboard.W:
 				driver.Forward(speed)
 				fmt.Println("w Pressed")
-			case 'a':
-				term.Sync()
+			case keyboard.A:
 				driver.Left(speed)
 				fmt.Println("a pressed")
-			case 's':
-				term.Sync()
+			case keyboard.S:
 				driver.Backward(speed)
 				fmt.Println("s pressed")
-			case 'd':
-				term.Sync()
+			case keyboard.D:
 				driver.Right(speed)
 				fmt.Println("d pressed")
-			case 'q':
-				term.Sync()
+			case keyboard.Q:
 				driver.CounterClockwise(speed)
 				fmt.Println("q pressed")
-			case 'e':
-				term.Sync()
+			case keyboard.E:
 				driver.Clockwise(speed)
 				fmt.Println("e pressed")
-			case 'r':
-				term.Sync()
+			case keyboard.R:
 				driver.Up(speed)
 				fmt.Println("r pressed")
-			case 'f':
-				term.Sync()
+			case keyboard.F:
 				driver.Down(speed)
 				fmt.Println("f pressed")
-			case 'l':
-				term.Sync()
+			case keyboard.L:
 				driver.Land()
-			case 't':
-				term.Sync()
+			case keyboard.T:
 				driver.TakeOff()
 				fmt.Println("t pressed")
 			default:
 				fmt.Println("hello fuck dog")
 			}
-		default:
-			term.Sync()
-		}
+
+		})
 
 	}
+
+	robot := gobot.NewRobot("keyboardbot",
+		[]gobot.Connection{},
+		[]gobot.Device{keyb},
+		work,
+	)
+
+	fmt.Println("keyboard initialized")
+
+	robot.Start()
 }
