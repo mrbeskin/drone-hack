@@ -1,17 +1,16 @@
 package control
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"gobot.io/x/gobot/platforms/dji/tello"
 )
 
-const THROTTLE_INIT = 20
+const THROTTLE_INIT = 40
 
 type Flyable interface {
-	ThrottleUp()
-	ThrottleDown()
 	Forward(throttle int)
 	Backward(throttle int)
 	Left(throttle int)
@@ -59,11 +58,14 @@ func (fc *FlightController) StartControl() {
 }
 
 func (fc *FlightController) processLoop() {
-	fc.ProcessAll()
-	time.Sleep(16 * time.Millisecond)
+	for {
+		fc.ProcessAll()
+		time.Sleep(25 * time.Millisecond)
+	}
 }
 
 func (fc *FlightController) ProcessAll() {
+	fc.ProcessThrottleChange()
 	fc.ProcessForwardEvents()
 	fc.ProcessBackEvents()
 	fc.ProcessLeftEvents()
@@ -89,56 +91,48 @@ func (fc *FlightController) ThrottleDown() {
 func (fc *FlightController) Forward() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.ForwardEvents = fc.ForwardEvents.pushZeroIfEmpty()
 	fc.ForwardEvents = fc.ForwardEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) Backward() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.BackEvents = fc.BackEvents.pushZeroIfEmpty()
 	fc.BackEvents = fc.BackEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) Left() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.LeftEvents = fc.LeftEvents.pushZeroIfEmpty()
 	fc.LeftEvents = fc.LeftEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) Right() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.RightEvents = fc.RightEvents.pushZeroIfEmpty()
 	fc.RightEvents = fc.RightEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) Up() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.UpEvents = fc.UpEvents.pushZeroIfEmpty()
 	fc.UpEvents = fc.UpEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) Down() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.DownEvents = fc.DownEvents.pushZeroIfEmpty()
 	fc.DownEvents = fc.DownEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) Clockwise() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.ClockwiseEvents = fc.ClockwiseEvents.pushZeroIfEmpty()
 	fc.ClockwiseEvents = fc.ClockwiseEvents.Push(fc.throttle)
 }
 
 func (fc *FlightController) CounterClockwise() {
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
-	fc.CounterClockwiseEvents = fc.CounterClockwiseEvents.pushZeroIfEmpty()
 	fc.CounterClockwiseEvents = fc.CounterClockwiseEvents.Push(fc.throttle)
 }
 
@@ -159,6 +153,7 @@ func (fc *FlightController) ProcessForwardEvents() {
 		ev, q := fc.ForwardEvents.Pop()
 		fc.vehicle.Forward(ev)
 		fc.ForwardEvents = q
+		fmt.Println("fwprocess")
 	}
 }
 
@@ -189,6 +184,8 @@ func (fc *FlightController) ProcessRightEvents() {
 		ev, q := fc.RightEvents.Pop()
 		fc.vehicle.Right(ev)
 		fc.RightEvents = q
+	} else {
+		fc.vehicle.Right(0)
 	}
 }
 
@@ -232,6 +229,8 @@ func (fc *FlightController) ProcessCounterClockwiseEvents() {
 	}
 }
 
+// TelloDrone implements Flyable and is in charge of actually calling
+// the driver to make offboard communication to the drone
 type TelloDrone struct {
 	driver   *tello.Driver
 	throttle int
@@ -275,6 +274,8 @@ func (td *TelloDrone) CounterClockwise(throttle int) {
 	td.driver.CounterClockwise(throttle)
 }
 
+// EventQueue is used to process drone events
+// it iss basically just a queue
 type EventQueue []int
 
 func NewEventQueue() EventQueue {
@@ -282,6 +283,7 @@ func NewEventQueue() EventQueue {
 }
 
 func (eq EventQueue) Push(val int) EventQueue {
+	eq = eq.PushZeroIfEmpty()
 	return append(eq, val)
 }
 
@@ -290,7 +292,12 @@ func (eq EventQueue) Peek() int {
 }
 
 func (eq EventQueue) Pop() (int, EventQueue) {
-	return eq[0], eq[1:]
+
+	next, eq := eq[0], eq[1:]
+	if eq.isEmpty() && (next != 0) {
+		eq = append(eq, 0)
+	}
+	return next, eq
 }
 
 func (eq EventQueue) isEmpty() bool {
@@ -300,7 +307,7 @@ func (eq EventQueue) isEmpty() bool {
 	return false
 }
 
-func (eq EventQueue) pushZeroIfEmpty() EventQueue {
+func (eq EventQueue) PushZeroIfEmpty() EventQueue {
 	if eq.isEmpty() {
 		return append(eq, 0)
 	}

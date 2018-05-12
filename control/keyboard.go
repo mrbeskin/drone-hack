@@ -12,6 +12,9 @@ const speed = 40
 
 func InitControl(driver *tello.Driver) {
 
+	drone := NewTelloDrone(driver)
+	controller := NewFlightController(drone)
+
 	keyb := keyboard.NewDriver()
 
 	fmt.Println("Drone: control intitialized")
@@ -24,36 +27,40 @@ func InitControl(driver *tello.Driver) {
 
 			switch k.Key {
 			case keyboard.W:
-				driver.Forward(speed)
-				fmt.Println("w Pressed")
+				controller.Forward()
+				fmt.Println("up Pressed")
 			case keyboard.A:
-				driver.Left(speed)
-				fmt.Println("a pressed")
+				controller.Left()
+				fmt.Println("left pressed")
 			case keyboard.S:
-				driver.Backward(speed)
-				fmt.Println("s pressed")
+				controller.Backward()
+				fmt.Println("down pressed")
 			case keyboard.D:
-				driver.Right(speed)
-				fmt.Println("d pressed")
+				controller.Right()
+				fmt.Println("right pressed")
 			case keyboard.Q:
-				driver.CounterClockwise(speed)
+				controller.CounterClockwise()
 				fmt.Println("q pressed")
 			case keyboard.E:
-				driver.Clockwise(speed)
+				controller.Clockwise()
 				fmt.Println("e pressed")
 			case keyboard.R:
-				driver.Up(speed)
+				controller.Up()
 				fmt.Println("r pressed")
 			case keyboard.F:
-				driver.Down(speed)
+				controller.Down()
 				fmt.Println("f pressed")
 			case keyboard.L:
 				driver.Land()
 			case keyboard.T:
 				driver.TakeOff()
 				fmt.Println("t pressed")
-			default:
-				fmt.Println("hello fuck dog")
+			case keyboard.M:
+				controller.ThrottleUp()
+				fmt.Println("m pressed")
+			case keyboard.N:
+				controller.ThrottleDown()
+				fmt.Println("n pressed")
 			}
 
 		})
@@ -67,6 +74,6 @@ func InitControl(driver *tello.Driver) {
 	)
 
 	fmt.Println("keyboard initialized")
-
+	controller.StartControl()
 	robot.Start()
 }
