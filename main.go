@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"runtime"
 	"time"
 
 	"github.com/mrbeskin/drone-hack/control"
@@ -52,7 +53,13 @@ func main() {
 }
 
 func GetMPlayerInput() (io.WriteCloser, error) {
-	mPlayer := exec.Command("mplayer", "-vo", "x11", "-fps", "30", "-")
+	var mPlayer *exec.Cmd
+	if runtime.GOOS == "darwin" {
+		fmt.Println("Mac OS detected")
+		mPlayer = exec.Command("mplayer", "-vo", "", "-fps", "30", "-")
+	} else {
+		mPlayer = exec.Command("mplayer", "-vo", "x11", "-fps", "30", "-")
+	}
 	defer mPlayer.Start()
 	return mPlayer.StdinPipe()
 }
