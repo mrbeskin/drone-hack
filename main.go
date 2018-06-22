@@ -31,16 +31,6 @@ func main() {
 		})
 
 		go control.InitControl(drone)
-
-		/*
-			gobot.After(10*time.Second, func() {
-				drone.Flip(1)
-			})
-
-			gobot.After(15*time.Second, func() {
-				drone.Land()
-			})
-		*/
 	}
 
 	robot := gobot.NewRobot("tello",
@@ -56,7 +46,7 @@ func GetMPlayerInput() (io.WriteCloser, error) {
 	var mPlayer *exec.Cmd
 	if runtime.GOOS == "darwin" {
 		fmt.Println("Mac OS detected")
-		mPlayer = exec.Command("mplayer", "-vo", "", "-fps", "30", "-")
+		mPlayer = exec.Command("mplayer", "-vo", "-fps", "30", "-")
 	} else {
 		mPlayer = exec.Command("mplayer", "-vo", "x11", "-fps", "30", "-")
 	}
@@ -70,4 +60,8 @@ func WriteCameraOutputToMplayer(droneVideoOutput chan []byte, mPlayerIn io.Write
 			fmt.Printf("failed to write frame to movie player: %v\n", err)
 		}
 	}
+}
+
+func WriteCameraOutputToBrowser(droneVideoOutput chan []byte) {
+
 }
