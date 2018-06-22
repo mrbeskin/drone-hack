@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<canvas id="videoCanvas" width="800" height="600" style="border:1px solid #000000;">
+</canvas>
+</html>
+
+<script>
+	var sock = new WebSocket("ws://127.0.0.1:8092");
+	var canvas = document.getElementById('videoCanvas');
+	var ctx = canvas.getContext('2d');
+	var cw = Math.floor(canvas.clientWidth / 100);
+	var ch = Math.floor(canvas.clientHeight /100);
+	sock.onmessage = function (event) {
+		draw(this, ctx, cw, ch);
+	}
+</script>
+
