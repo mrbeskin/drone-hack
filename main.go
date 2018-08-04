@@ -61,7 +61,3 @@ func WriteCameraOutputToMplayer(droneVideoOutput chan []byte, mPlayerIn io.Write
 		}
 	}
 }
-
-func WriteCameraOutputToBrowser(droneVideoOutput chan []byte) {
-
-}
